@@ -37,7 +37,7 @@ class VirusSpread(Model):
         width=50,
         height=50,
         infection_radius=2,
-        infection_probability=0.3,
+        infection_probability=0.06,
         infection_duration=30,
         initial_infected=1,
         speed=1.0,
