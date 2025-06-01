@@ -27,6 +27,7 @@ class Person(ContinuousSpaceAgent):
         speed=1.0,
         direction=(1, 1),
         sneeze_probability=0.5,
+        is_masked=False,
     ):
         """Create a new Person agent.
 
@@ -44,6 +45,7 @@ class Person(ContinuousSpaceAgent):
         self.speed = speed
         self.direction = direction
         self.sneeze_probability = sneeze_probability
+        self.is_masked = is_masked 
 
 
     def step(self):
@@ -56,13 +58,19 @@ class Person(ContinuousSpaceAgent):
                 self.state = "Recovered"
             
             if self.model.random.random() < self.sneeze_probability:
+                intensity = self.model.cloud_init_intensity
+                radius = self.model.cloud_radius
+                if self.is_masked:
+                    intensity *= (1 - self.model.mask_effectiveness)
+                    radius *= (1 - self.model.mask_effectiveness)
+
                 cloud = VirusCloud(
                     model=self.model,
                     space=self.space,
                     position=self.position.copy(),
-                    radius=self.model.sneeze_radius,
-                    intensity=self.model.sneeze_init_intensity,
-                    decay_rate=self.model.sneeze_decay_rate,
+                    cloud_radius=radius,
+                    cloud_intensity=intensity,
+                    decay_rate=self.model.cloud_decay_rate,
                 )
                 self.model.agents.add(cloud)
         
@@ -72,7 +80,33 @@ class Person(ContinuousSpaceAgent):
             for neighbor in neighbors:
                 # SOLUSI: Cek dulu apakah tetangga adalah Person!
                 if isinstance(neighbor, Person) and neighbor.state == "Infected":
-                    if self.model.random.random() < self.model.infection_probability:
+                    infection_probability = self.model.infection_probability
+                    
+                    # Jika yang terinfeksi (neighbor) pakai masker, probabilitas turun
+                    if neighbor.is_masked:
+                        infection_probability *= (1 - self.model.mask_effectiveness)
+                    
+                    # Jika yang rentan (self) pakai masker, probabilitas turun lagi
+                    if self.is_masked:
+                        infection_probability *= (1 - self.model.mask_effectiveness)
+                        
+                    if self.model.random.random() < infection_probability:
                         self.state = "Infected"
-                        # Keluar dari loop jika sudah terinfeksi agar efisien
                         break
+            
+            if self.state == "Susceptible":
+                # Dapatkan semua agen dalam radius deteksi awan
+                all_neighbors_in_cloud_range, _ = self.get_neighbors_in_radius(radius=self.model.cloud_radius)
+                # Filter hanya untuk VirusCloud
+                clouds_nearby = [agent for agent in all_neighbors_in_cloud_range if isinstance(agent, VirusCloud)]
+
+                for cloud in clouds_nearby:
+                    # Kalkulasi probabilitas infeksi dari awan
+                    cloud_infection_prob = cloud.intensity * self.model.infection_probability
+                    # Jika yang rentan pakai masker, probabilitas turun
+                    if self.is_masked:
+                        cloud_infection_prob *= (1 - self.model.mask_effectiveness)
+                    
+                    if self.model.random.random() < cloud_infection_prob:
+                        self.state = "Infected"
+                        break # Hentikan pengecekan jika sudah terinfeksi

@@ -9,13 +9,24 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../../.."))
 
-
+from mesa.datacollection import DataCollector
 import numpy as np
 import random
 from mesa import Model
 from agent import Person
 from mesa.experimental.continuous_space import ContinuousSpace
 
+def count_susceptible(model):
+    # Hanya hitung agen jika itu adalah instance dari Person DAN statusnya cocok
+    return len([a for a in model.agents if isinstance(a, Person) and a.state == "Susceptible"])
+
+def count_infected(model):
+    # Hanya hitung agen jika itu adalah instance dari Person DAN statusnya cocok
+    return len([a for a in model.agents if isinstance(a, Person) and a.state == "Infected"])
+
+def count_recovered(model):
+    # Hanya hitung agen jika itu adalah instance dari Person DAN statusnya cocok
+    return len([a for a in model.agents if isinstance(a, Person) and a.state == "Recovered"])
 
 class VirusSpread(Model):
     """Virus model class. Handles agent creation, placement and scheduling."""
@@ -30,11 +41,16 @@ class VirusSpread(Model):
         infection_duration=30,
         initial_infected=1,
         speed=1.0,
-        sneeze_decay_rate=0.02,  # <--- Tambahan
+        cloud_decay_rate=0.02,  # <--- Tambahan
         sneeze_probability=0.05,  # <--- Tambahan juga, untuk diteruskan ke agent
-        sneeze_radius=2.0,  # <--- Tambahan untuk radius bersin
-        sneeze_init_intensity=1.0,  # <--- Tambahan untuk intensitas bersin
+        cloud_radius=2.0,  # <--- Tambahan untuk radius bersin
+        cloud_init_intensity=1.0,  # <--- Tambahan untuk intensitas bersin
+
+        mask_usage_percentage=0.0, # Default: tidak ada yang pakai masker
+        mask_effectiveness=0.8,    # Default: masker mengurangi transmisi 80%
         seed=None
+
+        
     ):
         """Create a new Virus Spread model.
 
@@ -47,16 +63,39 @@ class VirusSpread(Model):
             infection_duration: Duration of infection in steps (default: 30)
             initial_infected: Number of initially infected persons (default: 1)
             seed: Random seed for reproducibility (default: None)
+            speed: Speed of movement for each agent (default: 1.0)
+            cloud_decay_rate: Rate at which the sneeze cloud dissipates (default: 0.02)
+            sneeze_probability: Probability of an infected person sneezing (default: 0.05)
+            cloud_radius: Radius of the sneeze cloud (default: 2.0)
+            cloud_init_intensity: Initial intensity of the sneeze cloud (default: 1.0)
         """
         super().__init__(seed=seed)
+        self.width = width
+        self.height = height
         self.population_size = population_size
         self.infection_radius = infection_radius
         self.infection_probability = infection_probability
         self.infection_duration = infection_duration
-        self.sneeze_decay_rate = sneeze_decay_rate
+        self.cloud_decay_rate = cloud_decay_rate
         self.sneeze_probability = sneeze_probability
-        self.sneeze_radius = sneeze_radius
-        self.sneeze_init_intensity = sneeze_init_intensity
+        self.cloud_radius = cloud_radius
+        self.cloud_init_intensity = cloud_init_intensity
+        self.mask_usage_percentage = mask_usage_percentage
+        self.mask_effectiveness = mask_effectiveness
+
+                # --- INISIALISASI DATACOLLECTOR DI SINI ---
+        self.datacollector = DataCollector(
+            model_reporters={
+                "Susceptible": count_susceptible,
+                "Infected": count_infected,
+                "Recovered": count_recovered,
+            },
+            agent_reporters={ # Mengumpulkan data per agen (jika diperlukan)
+                "State": "state",
+                "IsMasked": "is_masked" 
+            }
+        )
+
 
         # Set up the space
         self.space = ContinuousSpace(
@@ -74,6 +113,10 @@ class VirusSpread(Model):
         states = ["Infected"] * initial_infected + ["Susceptible"] * (population_size - initial_infected)
         random.shuffle(states)
 
+        num_masked = int(self.mask_usage_percentage * population_size)
+        is_masked_list = [True] * num_masked + [False] * (population_size - num_masked)
+        self.random.shuffle(is_masked_list)
+
         Person.create_agents(
             self,
             population_size,
@@ -84,6 +127,7 @@ class VirusSpread(Model):
             speed=speed,
             direction=directions,
             sneeze_probability=sneeze_probability,
+            is_masked=is_masked_list
             )
 
 
@@ -93,3 +137,4 @@ class VirusSpread(Model):
         All agents are activated in random order using the AgentSet shuffle_do method.
         """
         self.agents.shuffle_do("step")
+        self.datacollector.collect(self)
