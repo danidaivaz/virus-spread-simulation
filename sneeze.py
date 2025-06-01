@@ -12,14 +12,14 @@ class VirusCloud(ContinuousSpaceAgent):
         model,
         space,
         position,
-        radius=2.0,
-        intensity=1.0,
+        cloud_radius=2.0,
+        cloud_intensity=1.0,
         decay_rate=0.01
     ):
         super().__init__(space, model)
         self.position = position
-        self.radius = radius
-        self.intensity = intensity
+        self.cloud_radius = cloud_radius
+        self.intensity = cloud_intensity
         self.decay_rate = decay_rate
 
     def step(self):
