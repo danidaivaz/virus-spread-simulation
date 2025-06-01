@@ -1,1 +1,1 @@
-# virus_spread_simulation
+# virus-spread-simulation
