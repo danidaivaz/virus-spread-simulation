@@ -36,17 +36,18 @@ class VirusSpread(Model):
         population_size=100,
         width=50,
         height=50,
-        infection_radius=2,
+        infection_radius=1,
         infection_probability=0.06,
-        infection_duration=30,
+        infection_duration=504, # 7 hari
         initial_infected=1,
         speed=1.0,
         cloud_decay_rate=0.553,
-        sneeze_probability=0.07,
+        sneeze_probability=0.07, # 10 kali per hari
         cloud_radius=1.5,
         cloud_init_intensity=1.0,
         mask_usage_percentage=0.0,
         mask_effectiveness=0.7,
+        masking_scenario=4,
         seed=None
 
         
@@ -81,6 +82,7 @@ class VirusSpread(Model):
         self.cloud_init_intensity = cloud_init_intensity
         self.mask_usage_percentage = mask_usage_percentage
         self.mask_effectiveness = mask_effectiveness
+        self.masking_scenario = masking_scenario
 
                 # --- INISIALISASI DATACOLLECTOR DI SINI ---
         self.datacollector = DataCollector(
@@ -112,9 +114,36 @@ class VirusSpread(Model):
         states = ["Infected"] * initial_infected + ["Susceptible"] * (population_size - initial_infected)
         random.shuffle(states)
 
-        num_masked = int(self.mask_usage_percentage * population_size)
-        is_masked_list = [True] * num_masked + [False] * (population_size - num_masked)
-        self.random.shuffle(is_masked_list)
+        if self.masking_scenario == 1:
+            is_masked_list = [False] * population_size
+
+        elif self.masking_scenario == 2:
+            # Skenario 2: Hanya SATU agen terinfeksi awal yang bermasker.
+            # Jika initial_infected > 0, cari yang pertama terinfeksi dan set maskernya.
+            is_masked_list = [False] * population_size
+            for i in range(population_size):
+                if states[i] == "Infected":
+                   is_masked_list[i] = True
+        
+        elif self.masking_scenario == 3:
+            # Skenario 3: Beberapa agen (berdasarkan mask_usage_percentage) memakai masker,
+            # TAPI semua agen yang terinfeksi awal TIDAK memakai masker.
+            num_masked_randomly = int(self.mask_usage_percentage * population_size)
+            temp_mask_list = [True] * num_masked_randomly + [False] * (population_size - num_masked_randomly)
+            self.random.shuffle(temp_mask_list)
+            
+            is_masked_list = temp_mask_list # Mulai dengan penugasan acak
+            # Kemudian, pastikan semua yang awalnya terinfeksi TIDAK bermasker
+            for i in range(population_size):
+                if states[i] == "Infected":
+                    is_masked_list[i] = False
+        
+        elif self.masking_scenario == 4:
+            # Skenario 4: Sejumlah agen (berdasarkan mask_usage_percentage) memakai masker secara acak.
+            # Status infeksi awal tidak secara langsung memengaruhi penentuan masker awal ini.
+            num_masked = int(self.mask_usage_percentage * population_size)
+            is_masked_list = [True] * num_masked + [False] * (population_size - num_masked)
+            self.random.shuffle(is_masked_list)
 
         Person.create_agents(
             self,

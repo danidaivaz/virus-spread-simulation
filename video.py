@@ -1,24 +1,23 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.animation as animation
-from model import VirusSpread # Pastikan model.py Anda sudah memiliki DataCollector
+from model import VirusSpread
 from sneeze import VirusCloud
 from agent import Person 
 
 # --- KONFIGURASI SIMULASI & VIDEO ---
 SIMULATION_STEPS_PER_ANIMATION_FRAME = 1
-TOTAL_ANIMATION_FRAMES = 288
+TOTAL_ANIMATION_FRAMES = 100
 
 # --- PEMBUATAN MODEL ---
 print("Membuat model...")
 model = VirusSpread(
-    width=100,
-    height=100,
     population_size=100,
-    initial_infected=5,
-    infection_duration=360,
-    infection_probability=0.12,
+    initial_infected=1,
+    infection_duration=504,
+    infection_probability=0.06,
     mask_usage_percentage=0,
+    masking_scenario=1,
     seed=42,
 )
 
@@ -46,7 +45,9 @@ def update(frame_number):
     ax2.cla() # Hapus panel grafik data
 
     # --- Panel Atas (ax1): Animasi Agen ---
-    ax1.set_title(f"Simulasi Agen (Langkah: {model.steps})")
+    current_step = model.steps
+    current_day = current_step // 72 + 1
+    ax1.set_title(f"Simulasi Agen (Hari ke - {current_day})")
     
     # Iterasi melalui semua agen untuk digambar di ax1
     for agent in model.agents:
