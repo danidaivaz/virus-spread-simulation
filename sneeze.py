@@ -24,6 +24,6 @@ class VirusCloud(ContinuousSpaceAgent):
 
     def step(self):
         """Kurangi intensitas dan hapus cloud jika sudah terlalu lemah."""
-        self.intensity -= self.decay_rate
-        if self.intensity <= 0:
+        self.intensity *= (1 - self.decay_rate)
+        if self.intensity <= 0.001:
             self.model.agents.remove(self)
