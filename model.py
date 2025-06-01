@@ -47,6 +47,11 @@ class VirusSpread(Model):
             infection_duration: Duration of infection in steps (default: 30)
             initial_infected: Number of initially infected persons (default: 1)
             seed: Random seed for reproducibility (default: None)
+            speed: Speed of movement for each agent (default: 1.0)
+            sneeze_decay_rate: Rate at which the sneeze cloud dissipates (default: 0.02)
+            sneeze_probability: Probability of an infected person sneezing (default: 0.05)
+            sneeze_radius: Radius of the sneeze cloud (default: 2.0)
+            sneeze_init_intensity: Initial intensity of the sneeze cloud (default: 1.0)
         """
         super().__init__(seed=seed)
         self.population_size = population_size
