@@ -34,20 +34,19 @@ class VirusSpread(Model):
     def __init__(
         self,
         population_size=100,
-        width=100,
-        height=100,
+        width=50,
+        height=50,
         infection_radius=2,
-        infection_probability=0.3,
+        infection_probability=0.06,
         infection_duration=30,
         initial_infected=1,
         speed=1.0,
-        cloud_decay_rate=0.02,  # <--- Tambahan
-        sneeze_probability=0.05,  # <--- Tambahan juga, untuk diteruskan ke agent
-        cloud_radius=2.0,  # <--- Tambahan untuk radius bersin
-        cloud_init_intensity=1.0,  # <--- Tambahan untuk intensitas bersin
-
-        mask_usage_percentage=0.0, # Default: tidak ada yang pakai masker
-        mask_effectiveness=0.8,    # Default: masker mengurangi transmisi 80%
+        cloud_decay_rate=0.553,
+        sneeze_probability=0.07,
+        cloud_radius=1.5,
+        cloud_init_intensity=1.0,
+        mask_usage_percentage=0.0,
+        mask_effectiveness=0.7,
         seed=None
 
         

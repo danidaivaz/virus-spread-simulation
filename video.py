@@ -7,25 +7,18 @@ from agent import Person
 
 # --- KONFIGURASI SIMULASI & VIDEO ---
 SIMULATION_STEPS_PER_ANIMATION_FRAME = 1
-TOTAL_ANIMATION_FRAMES = 100 # Anda mengubah ini dari 300 menjadi 100
+TOTAL_ANIMATION_FRAMES = 288
 
 # --- PEMBUATAN MODEL ---
 print("Membuat model...")
 model = VirusSpread(
+    width=100,
+    height=100,
     population_size=100,
-    initial_infected=10,
-    sneeze_probability=0.03, # Pastikan nama ini benar di model.py
-    infection_duration=100,
-    speed=0.8,
-    width=50,
-    height=50,
-    infection_probability=0.4,
-    infection_radius=1.0,
-    cloud_decay_rate=0.02,
-    cloud_radius=2.0,
-    cloud_init_intensity=0.8, # Anda menamai ini cloud_init_intensity
-    mask_usage_percentage=0.5,
-    mask_effectiveness=0.5, 
+    initial_infected=5,
+    infection_duration=360,
+    infection_probability=0.12,
+    mask_usage_percentage=0,
     seed=42,
 )
 
